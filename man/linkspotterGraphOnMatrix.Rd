@@ -2,11 +2,18 @@
 % Please edit documentation in R/linkspotterGraphOnMatrix.R
 \name{linkspotterGraphOnMatrix}
 \alias{linkspotterGraphOnMatrix}
-\title{Linspotter graph on matrix}
+\title{Linkspotter graph on matrix}
 \usage{
-linkspotterGraphOnMatrix(corMatrix, cluster = FALSE,
-  variablesClustering = NULL, minCor = 0.3, corMethod = "Coef.",
-  smoothEdges = T, dynamicNodes = F, colorEdgesByCorDirection = F)
+linkspotterGraphOnMatrix(
+  corMatrix,
+  cluster = FALSE,
+  variablesClustering = NULL,
+  minCor = 0.3,
+  corMethod = "Coef.",
+  smoothEdges = T,
+  dynamicNodes = F,
+  colorEdgesByCorDirection = F
+)
 }
 \arguments{
 \item{corMatrix}{a dataframe corresponding to a matrix of correlation or distance.}
@@ -29,7 +36,7 @@ linkspotterGraphOnMatrix(corMatrix, cluster = FALSE,
 a visNetwork object corresponding to a dynamic graph for the correlation matrix visualization.
 }
 \description{
-Run the linkSpotter graph on a correlation matrix.
+Plot the Linkspotter graph from a correlation matrix.
 }
 \examples{
 # calculate a correlation dataframe

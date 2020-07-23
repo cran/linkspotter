@@ -1,4 +1,6 @@
-# Introduction
+# linkspotter
+
+[![](https://www.r-pkg.org/badges/version/linkspotter)](https://www.r-pkg.org/pkg/linkspotter)
 
 Linkspotter is a package of the R software that mainly allows to calculate and visualize using a graph all the bivariate links of a dataset.
 
@@ -10,7 +12,7 @@ Its main features are:
 
 It also offers a customizable user interface, allowing to:
 
-* visualize the links using a graph (the variables corresdond to the nodes and the links correspond to the edges)
+* visualize the links using a graph (the variables correspond to the nodes and the links correspond to the edges)
 * show the distribution of each variable using its histogram or barplot
 * visualize a link between a couple of variables using scatter plots, box plots, etc.
 
@@ -26,17 +28,13 @@ Available link coefficients are:
 # Installation
 
 ```{r, echo=TRUE, eval=FALSE}
-library(devtools)
-install_github("sambaala/linkspotter")
+install.packages("linkspotter")
 ```
-Behind a proxy:
+
+current development version from GitHub:
 
 ```{r, echo=TRUE, eval=FALSE}
 library(devtools)
-library(httr)
-set_config(
-  use_proxy(url="<my_proxy>", port=<my_proxy_port>)
-)
 install_github("sambaala/linkspotter")
 ```
 
@@ -48,13 +46,13 @@ Load the package:
 library(linkspotter)
 ```
 
-Take a look at the documentation:
+Have a look at the documentation:
 
 ```{r, echo=TRUE, eval=FALSE}
 help(package="linkspotter")
 ```
 
-The examples are carried out using "iris" data.
+The examples are carried out using 'iris' data.
 
 ## Calculate the MaxNMI between two variables
 
@@ -108,7 +106,7 @@ linkspotterGraph(corDF = corCouples, variablesClustering = cl,
   dynamicNodes = TRUE)
 ```
 
-## Launch the costumizable user interface
+## Launch the customizable user interface
 
 ```{r, echo=TRUE, eval=FALSE}
 linkspotterUI(dataset = iris, corDF = corCouples, 
@@ -148,13 +146,11 @@ help(linkspotterComplete)
 
 # User interface guide
 
-[Linskpotter UI example on 'iris' data](http://linkspotteririsexample.sigmant.net)
-
 ## 'Graphs' tab
 
 ### The graph
-The variables corresdond to the nodes and their links correspond to the edges.
-Node color depends on the clustering. Edge color depends on the correlation direction quantitative couples (blue: positive correlatuion, red: negative correlation).
+The variables correspond to the nodes and their links correspond to the edges.
+Node color depends on the clustering. Edge color depends on the correlation direction quantitative couples (blue: positive correlation, red: negative correlation).
 
 ### First features
 
@@ -176,7 +172,7 @@ Node color depends on the clustering. Edge color depends on the correlation dire
 * **nb. observations**: the number of entries in the dataset
 * **nb. variables**: the number of variables in the dataset
 * **nb. couples**: the number of couples
-* **nb. current edges**: the current number of edges plotted according to the chosen thresolds
+* **nb. current edges**: the current number of edges plotted according to the chosen thresholds
 
 ### Click on a graph link
 
@@ -223,6 +219,6 @@ This tab displays 2 tables:
 The **Correlation coefficient** option allows you to choose the coefficient of correlation to be considered among those calculated initially.
 
 
-# Sources
+# Importations
 
-Linkspotter uses and combine features coming from several other R packages, namely infotheo, minerva, energy, mclust, shiny, visNetwork, rAmCharts, ggplot2 and Hmisc.
+Linkspotter uses and combine features coming from several other R packages, namely 'infotheo', 'minerva', 'energy', 'mclust', 'shiny', 'shinybusy', 'visNetwork', 'rAmCharts' and 'ggplot2'.

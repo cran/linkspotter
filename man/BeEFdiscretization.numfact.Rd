@@ -4,20 +4,24 @@
 \alias{BeEFdiscretization.numfact}
 \title{BeEF: Best Equal-Frequency discretization}
 \usage{
-BeEFdiscretization.numfact(continuousY, factorX, includeFactorNA = T,
-  showProgress = F)
+BeEFdiscretization.numfact(
+  continuousY,
+  factorX,
+  includeNA = T,
+  showProgress = F
+)
 }
 \arguments{
 \item{continuousY}{a vector of numeric.}
 
 \item{factorX}{a vector of factor.}
 
-\item{includeFactorNA}{a boolean. TRUE to include NA value as a factor level.}
+\item{includeNA}{a boolean. TRUE to include NA value as a factor level.}
 
 \item{showProgress}{a boolean to decide whether to show the progress bar.}
 }
 \value{
-a double between 0 and 1 corresponding to the MaxNMI.
+a factor.
 }
 \description{
 Discretize a quantitative variable by optimizing the obtained the Normalized Mutual Information with a target qualitative variable

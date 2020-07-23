@@ -2,11 +2,18 @@
 % Please edit documentation in R/linkspotterUI.R
 \name{linkspotterUI}
 \alias{linkspotterUI}
-\title{Linspotter user interface runner}
+\title{Linkspotter user interface runner}
 \usage{
-linkspotterUI(dataset, corDF, variablesClustering = NULL,
-  defaultMinCor = 0.3, appTitle = "Linkspotter", htmlTop = "",
-  htmlBottom = "", ...)
+linkspotterUI(
+  dataset,
+  corDF,
+  variablesClustering = NULL,
+  defaultMinCor = 0.3,
+  appTitle = "Linkspotter",
+  htmlTop = "",
+  htmlBottom = "",
+  ...
+)
 }
 \arguments{
 \item{dataset}{the dataframe which variables bivariate correlations are contained in corDF}
@@ -29,7 +36,7 @@ linkspotterUI(dataset, corDF, variablesClustering = NULL,
 a 'shiny.appobj' object enable to deploy instantly the user interface for a customizable visualization.
 }
 \description{
-Run the linkSpotter user interface
+Build the Linkspotter user interface
 }
 \examples{
 # calculate a correlation dataframe

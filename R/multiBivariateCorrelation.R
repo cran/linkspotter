@@ -8,7 +8,9 @@
 #' @description  Computation of a correlation dataframe.
 #'
 #' @param dataset the dataframe which variables bivariate correlations are to be analyzed.
+#' @param targetVar a vector of character strings corresponding to the names of the target variables. If not NULL, correlation coefficients are computed only with that target variables.
 #' @param corMethods a vector of correlation coefficients to compute. The available coefficients are the following : \code{c("pearson","spearman","kendall","mic","distCor","MaxNMI")}. It is not case sensitive and still work if only the beginning of the word is put (e.g. \code{pears}).
+#' @param maxNbBins an integer used if corMethods include 'MaxNMI'. It corresponds to the number of bins limitation (for computation time limitation), maxNbBins=100 by default.
 #' @param showProgress a boolean to decide whether to show the progress bar.
 #' @return a specific dataframe containing correlations values or each specified correlation coefficient.
 #'
@@ -26,7 +28,33 @@
 #'
 #' @export
 #'
-multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","kendall","mic","MaxNMI"), showProgress=T){
+multiBivariateCorrelation<-function(dataset, targetVar=NULL, corMethods=c("pearson","spearman","kendall","mic","MaxNMI"), maxNbBins=100, showProgress=T){
+
+  # print info
+  if(showProgress){
+    startTime<-Sys.time()
+    nbObs=nrow(dataset)
+    p=ncol(dataset)
+    if(!is.null(targetVar)){
+      nt=length(targetVar)
+      if(sum(targetVar%in%colnames(dataset))!=nt){
+        stop("'targetVar' does not correspond to 'dataset' columns. Please check the spelling.")
+      }else{
+        nbCouples<-p*nt-nt*(nt+1)/2
+        cat(paste(c("Target variable(s): ", paste0(targetVar, collapse=", ")), collapse=""), "\n")
+        cat(paste(c("Number of covariates: ", p), collapse=""), "\n")
+        cat(paste(c("Number of couples to compute: ", nbCouples), collapse=""), "\n")
+      }
+    }else{
+      nt=p
+      nbCouples<-p*nt-nt*(nt+1)/2 #nbCouples=(p*p-p)/2
+      cat(paste(c("Number of variables: ", p), collapse=""), "\n")
+      cat(paste(c("Number of couples: ", nbCouples), collapse=""), "\n")
+    }
+    cat(paste(c("Number of observations: ", nbObs), collapse=""), "\n")
+    cat(paste0("Coef.: ", paste0(corMethods, collapse=", "), "\n"))
+    cat(paste("Start time:",startTime), "\n")
+  }
 
   #progress bar
   if(!showProgress){
@@ -46,6 +74,8 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
 
   # all combinaisons
   dfcmb=data.frame(t(utils::combn(colnames(dataset),2)))
+  # or all combinations with targetVar
+  if(!is.null(targetVar)) dfcmb<-dfcmb[dfcmb[,1]%in%targetVar|dfcmb[,2]%in%targetVar,]
 
   # detect type of couples
   typeOfCouple=apply(dfcmb,1,function(x){
@@ -77,7 +107,7 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
                if("kendall"%in%corMethods){kendall=stats::cor(x=dataset[,as.character(x[1])],y=dataset[,as.character(x[2])],use = "pairwise.complete.obs",method = "kendall"); cors=c(cors,kendall=kendall)}
                if("distCor"%in%corMethods){distCor=energy::dcor(x=dataset[,as.character(x[1])],y=dataset[,as.character(x[2])]); cors=c(cors,distCor=distCor)} # too long to compute
                if("mic"%in%corMethods){mic=minerva::mine(x=dataset[,as.character(x[1])],y=dataset[,as.character(x[2])],use = "pairwise.complete.obs")$MIC; cors=c(cors,mic=mic)}
-               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])]); cors=c(cors,MaxNMI=MaxNMI)}
+               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])],maxNbBins=maxNbBins); cors=c(cors,MaxNMI=MaxNMI)}
                as.vector(cors)
              },
              "num.fact"={
@@ -87,7 +117,7 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
                if("kendall"%in%corMethods){kendall=NA; cors=c(cors,kendall=kendall)}
                if("distCor"%in%corMethods){distCor=NA; cors=c(cors,distCor=distCor)} # too long to compute
                if("mic"%in%corMethods){mic=NA; cors=c(cors,mic=mic)}
-               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])]); cors=c(cors,MaxNMI=MaxNMI)}
+               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])],maxNbBins=maxNbBins); cors=c(cors,MaxNMI=MaxNMI)}
                as.vector(cors)
              },
              "fact.num"={
@@ -97,7 +127,7 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
                if("kendall"%in%corMethods){kendall=NA; cors=c(cors,kendall=kendall)}
                if("distCor"%in%corMethods){distCor=NA; cors=c(cors,distCor=distCor)} # too long to compute
                if("mic"%in%corMethods){mic=NA; cors=c(cors,mic=mic)}
-               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[2])],dataset[,as.character(x[1])]); cors=c(cors,MaxNMI=MaxNMI)}
+               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[2])],dataset[,as.character(x[1])],maxNbBins=maxNbBins); cors=c(cors,MaxNMI=MaxNMI)}
                as.vector(cors)
              },
              "fact.fact"={
@@ -107,7 +137,7 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
                if("kendall"%in%corMethods){kendall=NA; cors=c(cors,kendall=kendall)}
                if("distCor"%in%corMethods){distCor=NA; cors=c(cors,distCor=distCor)} # too long to compute
                if("mic"%in%corMethods){mic=NA; cors=c(cors,mic=mic)}
-               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])]); cors=c(cors,MaxNMI=MaxNMI)}
+               if("MaxNMI"%in%corMethods){MaxNMI=maxNMI(dataset[,as.character(x[1])],dataset[,as.character(x[2])],maxNbBins=maxNbBins); cors=c(cors,MaxNMI=MaxNMI)}
                as.vector(cors)
              }
       )
@@ -133,5 +163,9 @@ multiBivariateCorrelation<-function(dataset, corMethods=c("pearson","spearman","
 
   # return result formatted
   dfcmb=data.frame(id=as.character(1:nrow(dfcmb)),dfcmb)
+  if(showProgress){
+    cat(paste("Correlation coef. computation finished:",Sys.time()))
+    cat("\n")
+  }
   return(dfcmb)
 }

@@ -2,12 +2,18 @@
 % Please edit documentation in R/linkspotterGraph.R
 \name{linkspotterGraph}
 \alias{linkspotterGraph}
-\title{Linspotter graph runner}
+\title{Linkspotter graph runner}
 \usage{
-linkspotterGraph(corDF, variablesClustering = NULL, minCor = 0.3,
-  corMethod = colnames(corDF)[-c(1:3,
-  ncol(corDF))][length(colnames(corDF)[-c(1:3, ncol(corDF))])],
-  smoothEdges = T, dynamicNodes = F, colorEdgesByCorDirection = F)
+linkspotterGraph(
+  corDF,
+  variablesClustering = NULL,
+  minCor = 0.3,
+  corMethod = colnames(corDF)[-c(1:3, ncol(corDF))][length(colnames(corDF)[-c(1:3,
+    ncol(corDF))])],
+  smoothEdges = T,
+  dynamicNodes = F,
+  colorEdgesByCorDirection = F
+)
 }
 \arguments{
 \item{corDF}{a specific dataframe containing correlations values resulting from the function multiBivariateCorrelation()}
@@ -28,7 +34,7 @@ linkspotterGraph(corDF, variablesClustering = NULL, minCor = 0.3,
 a visNetwork object corresponding to a dynamic graph for the correlation matrix visualization.
 }
 \description{
-Run the linkSpotter graph
+plot the Linkspotter graph
 }
 \examples{
 # calculate a correlation dataframe

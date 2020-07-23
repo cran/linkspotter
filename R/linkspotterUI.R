@@ -1,11 +1,11 @@
 # --------------------------------------------------------------------------------
 # title: Linkspotter/linkspotterUI
-# description: run the linkSpotter user interface
+# description: build the Linkspotter user interface
 # author: Alassane Samba (alassane.samba@orange.com)
 # Copyright (c) 2017 Alassane Samba, Orange
 # ---------------------------------------------------------------------------------
-#' @title Linspotter user interface runner
-#' @description  Run the linkSpotter user interface
+#' @title Linkspotter user interface runner
+#' @description  Build the Linkspotter user interface
 #'
 #' @param dataset the dataframe which variables bivariate correlations are contained in corDF
 #' @param corDF a specific dataframe containing correlations values resulting from the function multiBivariateCorrelation()
@@ -37,6 +37,7 @@
 #' @import ggplot2
 #' @importFrom utils capture.output head
 #' @importFrom stats na.omit
+#' @importFrom shinybusy add_busy_spinner
 #'
 #' @export
 #'
@@ -75,6 +76,11 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
       # apply initial parameters
       edges=data.frame(edges,value=abs(edges[,defaultCorMethod]),title=unlist(lapply(edges[,defaultCorMethod], function(x){paste(c(defaultCorMethod, ': ', format(round(x, digits = 2), nsmall = 2)),collapse="")})))
       edges=edges[!is.na(edges$value)&edges$value>=defaultMinCor,]
+
+      # isolated nodes
+      if(input$hideIsolatedNodes){
+        nodes<-nodes[nodes$id%in%unique(c(as.character(edges$from),as.character(edges$to))),]
+      }
 
       #plot
       visNetwork(nodes,edges, selectConnectedEdges=F, width = '500px', height = '500px') %>%
@@ -145,9 +151,28 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
         if("colorDisabled"%in%colnames(edges)) colnames(edges)[colnames(edges)%in%'colorDisabled']<-"color"
       }
 
+      # isoloated Nodes
+      nodes<-nodes_raw
+      if(input$hideIsolatedNodes){
+        nodes_not_isolated<-unique(c(as.character(edges$from),as.character(edges$to)))
+        nodes_id_to_rm<-nodes$id[!nodes$id%in%nodes_not_isolated]
+        nodes<-nodes[nodes$id%in%nodes_not_isolated,]
+        visNetworkProxy("network") %>%
+          visUpdateNodes(nodes = nodes) %>%
+          visRemoveNodes(id = nodes_id_to_rm)
+      }else{
+        visNetworkProxy("network") %>%
+          visUpdateNodes(nodes = nodes)
+      }
+
       #show number of edges
       output$shiny_text_currentNbLinks<-renderText({
-        paste0("nb. current edges: ",length(stats::na.omit(edges$value)))
+        nodes_not_isolated<-unique(c(as.character(edges$from),as.character(edges$to)))
+        nodes_isolated<-nodes_raw$id[!nodes_raw$id%in%nodes_not_isolated]
+        paste0("nb. current edges: ",length(stats::na.omit(edges$value)), "\n",
+               "nb. current linked nodes: ",length(nodes_not_isolated), "\n",
+               "nb. current ", paste(c("","hidden ")[input$hideIsolatedNodes], collapse = ""), "isolated nodes: ",length(nodes_isolated)
+        )
       })
 
       # plot network
@@ -159,7 +184,6 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
         visOptions(highlightNearest = highlightInterestVarChoice, nodesIdSelection = highlightInterestVarChoice)
 
       # showClustering
-      nodes=nodes_raw
       if(!input$showClustering){
         nodes$group<-rep(1,nrow(nodes))
         visNetworkProxy("network") %>%
@@ -242,27 +266,45 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
 
     # scatterplots & boxplots
     output$shiny_edges_plot<-renderPlot({
+      flip=as.logical(input$flipGraph%%2)
       if((!is.null(input$edgeid))){
         edgeid=input$edgeid
         variab1=as.character(corDF$X1[corDF$id%in%c(edgeid)])
         variab2=as.character(corDF$X2[corDF$id%in%c(edgeid)])
-        dataset=dataset
+        tab0=as.data.frame(table(x=dataset[,variab1],y=dataset[,variab2]))
         edges=corDF
         if((edges$typeOfCouple[edges$id%in%c(edgeid)])%in%c("num.num")){
-          plot(x = as.numeric(dataset[,variab1]), y = as.numeric(dataset[,variab2]), xlab = variab1, ylab=variab2, main=paste(paste(variab1,"vs"),variab2))
+          tab1=tab0[tab0$Freq>0,]
+          tab1$x<-as.numeric(as.character(tab1$x))
+          tab1$y<-as.numeric(as.character(tab1$y))
+          g<-ggplot(tab1, aes_string("x", "y", size = "Freq")) +
+            geom_point(alpha=0.7) +
+            labs(x = variab1, y = variab2)
+          if(flip) g<-g+coord_flip()
+          g
         }else if((edges$typeOfCouple[edges$id%in%c(edgeid)])%in%c("num.fact")){
-          boostedBoxplot(y=as.numeric(dataset[,variab1]),x=as.factor(dataset[,variab2]), laby = variab1, labx=variab2, main=paste(paste(variab1,"vs"),variab2))
+          g<-ggplot(dataset, aes_string(variab2, variab1)) +
+            geom_boxplot() +
+            stat_summary(fun.y=mean, geom="point", shape=23, size=4)
+          if(flip) g<-g+coord_flip()
+          g
         }else if((edges$typeOfCouple[edges$id%in%c(edgeid)])%in%c("fact.num")){
-          plot(as.numeric(dataset[,variab2])~as.factor(dataset[,variab1]), ylab = variab2, xlab=variab1, main=paste(paste(variab1,"vs"),variab2))
+          g<-ggplot(dataset, aes_string(variab1, variab2)) +
+            geom_boxplot() +
+            stat_summary(fun.y=mean, geom="point", shape=23, size=4)
+          if(flip) g<-g+coord_flip()
+          g
         }else if((edges$typeOfCouple[edges$id%in%c(edgeid)])%in%c("fact.fact")){
-          ggplot(as.data.frame(table(x=dataset[,variab1],y=dataset[,variab2])), aes_string('x', 'y')) +
-            geom_tile(aes_string(fill = 'Freq')) +
-            geom_text(aes_string(label = 'Freq'), color="white") +
+          g<-ggplot(tab0, aes_string("x", "y")) +
+            geom_tile(aes_string(fill = "Freq")) +
+            geom_text(aes_string(label = "Freq"), color="white") +
             scale_x_discrete(expand = c(0,0)) +
             scale_y_discrete(expand = c(0,0)) +
             scale_fill_gradient("Freq", low = "lightblue", high = "blue") +
             theme_bw() +
             labs(x = variab1, y = variab2)
+          if(flip) g<-g+coord_flip()
+          g
         }
       }
     })
@@ -272,7 +314,8 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
       paste(c(
         paste("nb. observations:",nrow(data.frame(dataset))),
         paste("\nnb. variables:",ncol(data.frame(dataset))),
-        paste("\nnb. couples:",((ncol(data.frame(dataset))*ncol(data.frame(dataset)))-ncol(data.frame(dataset)))/2)
+        paste("\nnb. couples:",((ncol(data.frame(dataset))*ncol(data.frame(dataset)))-ncol(data.frame(dataset)))/2),
+        paste("\nnb. corr. calculated:",length(stats::na.omit(corDF[,input$selectCorMethod])))
       ),collapse = "")
     })
 
@@ -382,6 +425,7 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
                             #uiOutput("colorEdges_ui"),
                             checkboxInput("smoothEdges","Smooth edges",FALSE),
                             checkboxInput("dynamicNodes","Dynamic nodes stabilization",FALSE),
+                            checkboxInput("hideIsolatedNodes","Hide isolated nodes",length(unique(unlist(corDF[,1:2])))>50),
                             uiOutput("corDirectionSelect_ui"),
                             actionButton(inputId = "buttonStalilize", label = "Re-stabilize"),
                             hr(),
@@ -389,12 +433,16 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
                             verbatimTextOutput("shiny_comments"),
                             verbatimTextOutput("shiny_text_currentNbLinks"),
                             HTML("<strong>Select edge/node:</strong>"),
+                            br(),br(),
+                            actionButton("flipGraph","Flip the bivariate plot"),
+                            br(),br(),
                             verbatimTextOutput("shiny_edge_summary"),
                             verbatimTextOutput("shiny_node_summary")
                           ),
                           mainPanel(
                             fluidRow(
-                              visNetworkOutput("network")
+                              visNetworkOutput("network"),
+                              shinybusy::add_busy_spinner(spin = "fading-circle", margins = c("40%", "30%"), height = "6%", width = "6%")
                             ),
                             fluidRow(
                               column(6,
@@ -417,7 +465,7 @@ linkspotterUI<-function(dataset, corDF, variablesClustering=NULL, defaultMinCor=
                )
     ),
     fluidRow(align="center",
-             div(HTML("<small> Shiny app generated by <a href='http://linkspotter.sigmant.net/'>Linkspotter</a></small>"))
+             div(HTML("<small> Shiny app generated by <a href='http://linkspotter.sigmant.net/' target='_blank'>Linkspotter</a></small>"))
 
     ),
     tags$head(HTML(htmlBottom))

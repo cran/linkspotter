@@ -4,20 +4,27 @@
 \alias{BeEFdiscretization.numnum}
 \title{BeEF: Best Equal-Frequency discretization (for a couple of quantitative variables)}
 \usage{
-BeEFdiscretization.numnum(continuousX, continuousY, maxNbBins = 100,
-  showProgress = F)
+BeEFdiscretization.numnum(
+  continuousX,
+  continuousY,
+  maxNbBins = 100,
+  includeNA = T,
+  showProgress = F
+)
 }
 \arguments{
 \item{continuousX}{a vector of numeric.}
 
 \item{continuousY}{a vector of numeric.}
 
-\item{maxNbBins}{an integer corresponding to the number of bin limitation (for computation time limitation), maxNbBins=100 by default.}
+\item{maxNbBins}{an integer corresponding to the number of bins limitation (for computation time limitation), maxNbBins=100 by default.}
+
+\item{includeNA}{a boolean. TRUE to include NA value as a factor level.}
 
 \item{showProgress}{a boolean to decide whether to show the progress bar.}
 }
 \value{
-a double between 0 and 1 corresponding to the MaxNMI.
+a list of two factors.
 }
 \description{
 Discretize two quantitative variables by optimizing the obtained the Normalized Mutual Information
